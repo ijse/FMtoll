@@ -82,6 +82,7 @@ public class FreeMarkerUtil {
 		freemarkerConfig.setLocale(Locale.CHINA);
 		freemarkerConfig.setDefaultEncoding(configObj.getEncoding());
 		freemarkerConfig.setEncoding(Locale.CHINA, configObj.getEncoding());
+		freemarkerConfig.setTagSyntax(Configuration.AUTO_DETECT_TAG_SYNTAX);
 		try {
 			freemarkerConfig.setDirectoryForTemplateLoading(templateDir);
 		} catch (IOException e) {
