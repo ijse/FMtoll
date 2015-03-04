@@ -2,8 +2,9 @@ package cn.ijser.app;
 
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Map;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import cn.ijser.util.FreeMarkerUtil;
@@ -21,18 +22,25 @@ public class FMtoll {
 
 		// 初始化
 		FreeMarkerUtil.initConfig(fmconfig);
-
-		// 转换dataModel为MAP
-		JSONParser parser = new JSONParser();
-		Map<String, Object> root = null;
-		try {
-			root = (Map<String, Object>) parser.parse(dataModel);
-		} catch (org.json.simple.parser.ParseException e) {
-			e.printStackTrace();
-		}
+		
 
 		// 输出模板
 		Writer out = new OutputStreamWriter(System.out);
-		FreeMarkerUtil.processTemplate(templateName, root, out);
+
+		// 转换dataModel为MAP
+		JSONParser parser = new JSONParser();
+		Object parsedObject = null;
+		try {
+			 parsedObject = parser.parse(dataModel);
+
+		} catch (org.json.simple.parser.ParseException e) {
+			e.printStackTrace();
+		}
+		
+		 if(parsedObject instanceof JSONObject) {
+			 FreeMarkerUtil.processTemplate(templateName, (JSONObject) parsedObject, out);
+		 } else if(parsedObject instanceof JSONArray) {
+			 FreeMarkerUtil.processTemplate(templateName, (JSONArray) parsedObject, out);
+		 }	
 	}
 }
