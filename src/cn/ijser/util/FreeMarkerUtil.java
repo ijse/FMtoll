@@ -168,7 +168,7 @@ public class FreeMarkerUtil {
 		}
 
 		// addAutoImport
-		scanFolder(templateDir);
+		//scanFolder(templateDir);
 
 		// setSharedVariable
 		try {
