@@ -16,6 +16,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.Scriptable;
 
 import cn.ijser.bean.ConfigBean;
@@ -110,10 +111,12 @@ public class FreeMarkerUtil {
 		        scanner = new Scanner(f);
 		        while (scanner.hasNextLine()){
 		        	sb.append(scanner.nextLine());
+		        	sb.append(System.getProperty("line.separator"));
 	            }      
 	        }
 
 	        script = sb.toString();
+	        
 	        Object o = cx.evaluateString(scope, script, null, 0, null);
 	        
 			template.process(o, out, new RhinoWrapper());
@@ -122,6 +125,10 @@ public class FreeMarkerUtil {
 			System.out.println("读取模板文件IO异常！");
 			e.printStackTrace();
 		} catch (TemplateException e) {
+			e.printStackTrace();
+		} catch(EvaluatorException e) {
+			System.err.println(e.getMessage() + " at line number: " + e.getLineNumber());
+			System.err.println(e.getScriptStackTrace());
 			e.printStackTrace();
 		} finally {
 			try {
