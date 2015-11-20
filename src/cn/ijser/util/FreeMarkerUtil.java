@@ -62,8 +62,12 @@ public class FreeMarkerUtil {
 			Template template = freemarkerConfig.getTemplate(templateName,
 					configObj.getEncoding());
 
+            // Import all the given deps into the processing environment.
+            Environment processingEnvironment = template.createProcessingEnvironment(root, out);
 
-			template.process(root, out);
+            importLibs(processingEnvironment, deps);
+
+            processingEnvironment.process();
 			out.flush();
 		} catch (IOException e) {
 			System.out.println("读取模板文件IO异常！");
@@ -121,12 +125,7 @@ public class FreeMarkerUtil {
             // Import all the given deps into the processing environment.
             Environment processingEnvironment = template.createProcessingEnvironment(o, out, new RhinoWrapper());
 
-            if (deps != null) {
-                for (Object depJSON : deps) {
-                    String dep = (String) depJSON;
-                    processingEnvironment.importLib(dep, getNamespaceForDep(dep));
-                }
-            }
+            importLibs(processingEnvironment, deps);
 
             processingEnvironment.process();
 			out.flush();
@@ -151,6 +150,15 @@ public class FreeMarkerUtil {
 			}
 		}
 	}
+
+    private static void importLibs(Environment environment, JSONArray deps) throws IOException, TemplateException {
+        if (deps != null) {
+            for (Object depJSON : deps) {
+                String dep = (String) depJSON;
+                environment.importLib(dep, getNamespaceForDep(dep));
+            }
+        }
+    }
 
     private static String getNamespaceForDep(String dep) {
         int slash = dep.lastIndexOf("/");
