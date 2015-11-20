@@ -153,7 +153,7 @@ public class FreeMarkerUtil {
 	}
 
     private static String getNamespaceForDep(String dep) {
-        int slash = dep.indexOf("/");
+        int slash = dep.lastIndexOf("/");
         int ftl = dep.lastIndexOf(".ftl");
         return dep.substring(slash > 0 ? slash + 1 : 0, ftl > 0 ? ftl : dep.length() - 1);
     }
