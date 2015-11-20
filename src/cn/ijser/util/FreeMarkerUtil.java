@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 
+import freemarker.core.Environment;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -49,20 +50,19 @@ public class FreeMarkerUtil {
 	 *            输出对象 具体输出到哪里
 	 */
 	@SuppressWarnings("unchecked")
-	public static void processTemplate(String templateName, JSONObject jsonObject,
+	public static void processTemplate(String templateName, JSONArray deps, JSONObject jsonDataModel,
 			Writer out) {
-		
 
-		Map<String, Object> root = new HashMap<String, Object>();
-		root = (Map<String, Object>) jsonObject;
-		
+
+		Map<String, Object> root = (Map<String, Object>) jsonDataModel;
+
 		try {
-			
+
 			// 获得模板
 			Template template = freemarkerConfig.getTemplate(templateName,
 					configObj.getEncoding());
 
-	        
+
 			template.process(root, out);
 			out.flush();
 		} catch (IOException e) {
@@ -89,37 +89,46 @@ public class FreeMarkerUtil {
 	 * @param out
 	 *            输出对象 具体输出到哪里
 	 */
-	public static void processTemplate(String templateName, JSONArray jsonArray,
+	public static void processTemplate(String templateName, JSONArray deps, JSONArray jsonDataModel,
 			Writer out) {
 
 		Context cx = Context.enter();
 		Scanner scanner = null;
-		Object[] files = jsonArray.toArray();
+		Object[] dataFiles = jsonDataModel.toArray();
 		try {
-			
-			
+
 			// 获得模板
 			Template template = freemarkerConfig.getTemplate(templateName,
 					configObj.getEncoding());
 
-
 	        Scriptable scope = cx.initStandardObjects();
-	        String script = "";
         	StringBuilder sb = new StringBuilder();
-	        for(int i = 0; i < files.length; i++) {
-	        	File f = new File(files[i].toString());
+			// Concats all the js files
+	        for(int i = 0; i < dataFiles.length; i++) {
+	        	File f = new File(dataFiles[i].toString());
 		        scanner = new Scanner(f);
 		        while (scanner.hasNextLine()){
 		        	sb.append(scanner.nextLine());
 		        	sb.append(System.getProperty("line.separator"));
-	            }      
+	            }
 	        }
 
-	        script = sb.toString();
-	        
+	        String script = sb.toString();
+
+			// Runs the concated js file and returns it as a data model to use with the templates
 	        Object o = cx.evaluateString(scope, script, null, 0, null);
-	        
-			template.process(o, out, new RhinoWrapper());
+
+            // Import all the given deps into the processing environment.
+            Environment processingEnvironment = template.createProcessingEnvironment(o, out, new RhinoWrapper());
+
+            if (deps != null) {
+                for (Object depJSON : deps) {
+                    String dep = (String) depJSON;
+                    processingEnvironment.importLib(dep, getNamespaceForDep(dep));
+                }
+            }
+
+            processingEnvironment.process();
 			out.flush();
 		} catch (IOException e) {
 			System.out.println("读取模板文件IO异常！");
@@ -142,9 +151,15 @@ public class FreeMarkerUtil {
 			}
 		}
 	}
-	
 
-	/**
+    private static String getNamespaceForDep(String dep) {
+        int slash = dep.indexOf("/");
+        int ftl = dep.lastIndexOf(".ftl");
+        return dep.substring(slash > 0 ? slash + 1 : 0, ftl > 0 ? ftl : dep.length() - 1);
+    }
+
+
+    /**
 	 * 初始化模板配置
 	 *
 	 * @param servletContext
@@ -184,9 +199,9 @@ public class FreeMarkerUtil {
 			System.out.println("添加全局变量时出错！");
 			e.printStackTrace();
 		}
-		
-		
-		
+
+
+
 		freemarkerConfig.setSharedVariable("block", new BlockDirective());
 		freemarkerConfig.setSharedVariable("override", new OverrideDirective());
 		freemarkerConfig.setSharedVariable("extends", new ExtendsDirective());
@@ -254,7 +269,7 @@ public class FreeMarkerUtil {
 				}
 			}
 		} else {
-			System.err.println("Config File Does not exist!");
+			System.err.println("Config File does not exist!");
 		}
 		return output;
 	}

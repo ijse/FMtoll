@@ -14,33 +14,42 @@ import cn.ijser.util.FreeMarkerUtil;
  *
  */
 public class FMtoll {
-	@SuppressWarnings("unchecked")
-	public static void main(String[] args) {
-		String fmconfig = args[0];
-		String templateName = args[1];
-		String dataModel = args[2];
 
-		// 初始化
-		FreeMarkerUtil.initConfig(fmconfig);
-		
+    @SuppressWarnings("unchecked")
+    public static void main(String[] args) {
+        String fmconfig = args[0];
+        String templateName = args[1];
+        String dataModel = args[2];
+        String deps = args[3];
 
-		// 输出模板
-		Writer out = new OutputStreamWriter(System.out);
+        // 初始化
+        FreeMarkerUtil.initConfig(fmconfig);
 
-		// 转换dataModel为MAP
-		JSONParser parser = new JSONParser();
-		Object parsedObject = null;
-		try {
-			 parsedObject = parser.parse(dataModel);
+        // 输出模板
+        Writer out = new OutputStreamWriter(System.out);
 
-		} catch (org.json.simple.parser.ParseException e) {
-			e.printStackTrace();
-		}
-		
-		 if(parsedObject instanceof JSONObject) {
-			 FreeMarkerUtil.processTemplate(templateName, (JSONObject) parsedObject, out);
-		 } else if(parsedObject instanceof JSONArray) {
-			 FreeMarkerUtil.processTemplate(templateName, (JSONArray) parsedObject, out);
-		 }	
-	}
+        // 转换dataModel为MAP
+        Object parsedData = parseJSON(dataModel);
+
+        JSONArray parsedDeps = (JSONArray) parseJSON(deps);
+
+        if (parsedData instanceof JSONObject) {
+            FreeMarkerUtil.processTemplate(templateName, parsedDeps, (JSONObject) parsedData, out);
+        } else if (parsedData instanceof JSONArray) {
+            FreeMarkerUtil.processTemplate(templateName, parsedDeps, (JSONArray) parsedData, out);
+        }
+    }
+
+    private static Object parseJSON(String data) {
+        Object parsedObject = null;
+        if (data != null && !data.equals("undefined")) {
+            JSONParser parser = new JSONParser();
+            try {
+                parsedObject = parser.parse(data);
+            } catch (org.json.simple.parser.ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        return parsedObject;
+    }
 }
