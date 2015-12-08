@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Scanner;
 
 import freemarker.core.Environment;
+import freemarker.template.*;
+import freemarker.template.utility.ObjectConstructor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -22,10 +24,9 @@ import org.mozilla.javascript.Scriptable;
 
 import cn.ijser.bean.ConfigBean;
 import freemarker.ext.rhino.RhinoWrapper;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.TemplateModelException;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 
 /**
@@ -44,7 +45,7 @@ public class FreeMarkerUtil {
 	/**
 	 * @param templateName
 	 *            模板名字
-	 * @param root
+	 * @param deps
 	 *            模板根 用于在模板内输出结果集
 	 * @param out
 	 *            输出对象 具体输出到哪里
@@ -88,12 +89,12 @@ public class FreeMarkerUtil {
 	/**
 	 * @param templateName
 	 *            模板名字
-	 * @param root
+	 * @param deps
 	 *            模板根 用于在模板内输出结果集
 	 * @param out
 	 *            输出对象 具体输出到哪里
 	 */
-	public static void processTemplate(String templateName, JSONArray deps, JSONArray jsonDataModel,
+	public static void processTemplate(String templateName, JSONArray deps, JSONArray jsonDataModel, JSONArray nodes,
 			Writer out) {
 
 		Context cx = Context.enter();
@@ -105,26 +106,39 @@ public class FreeMarkerUtil {
 			Template template = freemarkerConfig.getTemplate(templateName,
 					configObj.getEncoding());
 
+            Map<String, Object> root =  new HashMap<String, Object>();
 	        Scriptable scope = cx.initStandardObjects();
-        	StringBuilder sb = new StringBuilder();
-			// Concats all the js files
+			// executes all the js files in sequence
 	        for(int i = 0; i < dataFiles.length; i++) {
+                StringBuilder sb = new StringBuilder();
 	        	File f = new File(dataFiles[i].toString());
+                String fileName = f.getName().split("\\.")[0];
 		        scanner = new Scanner(f);
 		        while (scanner.hasNextLine()){
 		        	sb.append(scanner.nextLine());
 		        	sb.append(System.getProperty("line.separator"));
 	            }
+                String script = sb.toString();
+                Object o = cx.evaluateString(scope, script, fileName, 0, null);
+                root.put(fileName, o);
 	        }
 
-	        String script = sb.toString();
 
-			// Runs the concated js file and returns it as a data model to use with the templates
-	        Object o = cx.evaluateString(scope, script, null, 0, null);
+            Object[] nodeFiles = nodes.toArray();
+            // Parse all the xml nodes
+            for(int i = 0; i < nodeFiles.length; i++) {
+                File f = new File(nodeFiles[i].toString());
+                String fileName = f.getName().split("\\.")[0];
+                root.put(fileName, freemarker.ext.dom.NodeModel.parse(f));
+            }
+
+
+
+
+            root.put("objectConstructor", new ObjectConstructor());
+            Environment processingEnvironment = template.createProcessingEnvironment(root, out, new RhinoWrapper());
 
             // Import all the given deps into the processing environment.
-            Environment processingEnvironment = template.createProcessingEnvironment(o, out, new RhinoWrapper());
-
             importLibs(processingEnvironment, deps);
 
             processingEnvironment.process();
@@ -135,10 +149,14 @@ public class FreeMarkerUtil {
 		} catch (TemplateException e) {
 			e.printStackTrace();
 		} catch(EvaluatorException e) {
-			System.err.println(e.getMessage() + " at line number: " + e.getLineNumber());
-			System.err.println(e.getScriptStackTrace());
-			e.printStackTrace();
-		} finally {
+            System.err.println(e.getMessage() + " at line number: " + e.getLineNumber());
+            System.err.println(e.getScriptStackTrace());
+            e.printStackTrace();
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } finally {
 			try {
 				out.close();
 				Context.exit();
@@ -170,9 +188,7 @@ public class FreeMarkerUtil {
     /**
 	 * 初始化模板配置
 	 *
-	 * @param servletContext
-	 *            javax.servlet.ServletContext
-	 * @param templateDir
+	 * @param configFile
 	 *            模板位置
 	 * @throws IOException
 	 * @throws TemplateModelException
@@ -218,7 +234,7 @@ public class FreeMarkerUtil {
 	/**
 	 * 将配置文件内容转换为ConfigBean对象
 	 *
-	 * @param configFile
+	 * @param configContent
 	 *            配置文件位置
 	 * @return
 	 */
@@ -321,4 +337,5 @@ public class FreeMarkerUtil {
 					.setSharedVariable(entry.getKey(), entry.getValue());
 		}
 	}
+
 }

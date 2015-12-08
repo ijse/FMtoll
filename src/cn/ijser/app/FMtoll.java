@@ -21,10 +21,10 @@ public class FMtoll {
         String templateName = args[1];
         String dataModel = args[2];
         String deps = args[3];
+        String nodes = args[4];
 
         // 初始化
         FreeMarkerUtil.initConfig(fmconfig);
-
         // 输出模板
         Writer out = new OutputStreamWriter(System.out);
 
@@ -32,11 +32,12 @@ public class FMtoll {
         Object parsedData = parseJSON(dataModel);
 
         JSONArray parsedDeps = (JSONArray) parseJSON(deps);
+        JSONArray parsedNodes = (JSONArray) parseJSON(nodes);
 
         if (parsedData instanceof JSONObject) {
             FreeMarkerUtil.processTemplate(templateName, parsedDeps, (JSONObject) parsedData, out);
         } else if (parsedData instanceof JSONArray) {
-            FreeMarkerUtil.processTemplate(templateName, parsedDeps, (JSONArray) parsedData, out);
+            FreeMarkerUtil.processTemplate(templateName, parsedDeps, (JSONArray) parsedData, (JSONArray) parsedNodes, out);
         }
     }
 
