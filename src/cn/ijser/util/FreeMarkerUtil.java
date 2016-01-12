@@ -160,7 +160,8 @@ public class FreeMarkerUtil {
 			try {
 				out.close();
 				Context.exit();
-				scanner.close();
+				if (scanner != null)
+					scanner.close();
 				out = null;
 			} catch (IOException e) {
 				System.out.println("读取模板文件IO异常！");
