@@ -207,6 +207,7 @@ public class FreeMarkerUtil {
 		freemarkerConfig.setDefaultEncoding(configObj.getEncoding());
 		freemarkerConfig.setEncoding(Locale.ENGLISH, configObj.getEncoding());
 		freemarkerConfig.setTagSyntax(Configuration.AUTO_DETECT_TAG_SYNTAX);
+		freemarkerConfig.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
 		try {
 			freemarkerConfig.setDirectoryForTemplateLoading(templateDir);
 		} catch (IOException e) {
