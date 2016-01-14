@@ -44,11 +44,13 @@ public class FreeMarkerUtil {
 
 	/**
 	 * @param templateName
-	 *            模板名字
+	 *            Template name
 	 * @param deps
 	 *            模板根 用于在模板内输出结果集
+	 *            Template root for output in the template set
 	 * @param out
 	 *            输出对象 具体输出到哪里
+	 *            Where to output target specific output
 	 */
 	@SuppressWarnings("unchecked")
 	public static void processTemplate(String templateName, JSONArray deps, JSONObject jsonDataModel,
@@ -59,7 +61,7 @@ public class FreeMarkerUtil {
 
 		try {
 
-			// 获得模板
+			// Get template
 			Template template = freemarkerConfig.getTemplate(templateName,
 					configObj.getEncoding());
 
@@ -71,7 +73,7 @@ public class FreeMarkerUtil {
             processingEnvironment.process();
 			out.flush();
 		} catch (IOException e) {
-			System.out.println("读取模板文件IO异常！");
+			System.out.println("IOError reading the template file！");
 			e.printStackTrace();
 		} catch (TemplateException e) {
 			e.printStackTrace();
@@ -80,7 +82,7 @@ public class FreeMarkerUtil {
 				out.close();
 				out = null;
 			} catch (IOException e) {
-				System.out.println("读取模板文件IO异常！");
+				System.out.println("IOError reading the template file！");
 				e.printStackTrace();
 			}
 		}
@@ -88,11 +90,13 @@ public class FreeMarkerUtil {
 
 	/**
 	 * @param templateName
-	 *            模板名字
+	 *            Template name
 	 * @param deps
 	 *            模板根 用于在模板内输出结果集
+	 *            Template root for output in the template set
 	 * @param out
 	 *            输出对象 具体输出到哪里
+	 *            Where to output target specific output
 	 */
 	public static void processTemplate(String templateName, JSONArray deps, JSONArray jsonDataModel, JSONArray nodes,
 			Writer out) {
@@ -102,7 +106,7 @@ public class FreeMarkerUtil {
 		Object[] dataFiles = jsonDataModel.toArray();
 		try {
 
-			// 获得模板
+			// Get template
 			Template template = freemarkerConfig.getTemplate(templateName,
 					configObj.getEncoding());
 
@@ -143,19 +147,22 @@ public class FreeMarkerUtil {
 
             processingEnvironment.process();
 			out.flush();
-		} catch (IOException e) {
-			System.out.println("读取模板文件IO异常！");
-			e.printStackTrace();
-		} catch (TemplateException e) {
-			e.printStackTrace();
-		} catch(EvaluatorException e) {
-            System.err.println(e.getMessage() + " at line number: " + e.getLineNumber());
-            System.err.println(e.getScriptStackTrace());
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
+//		} catch (IOException e) {
+//			System.out.println("读取模板文件IO异常！");
+//			e.printStackTrace();
+//		} catch (TemplateException e) {
+//			e.printStackTrace();
+//		} catch(EvaluatorException e) {
+//            System.err.println(e.getMessage() + " at line number: " + e.getLineNumber());
+//            System.err.println(e.getScriptStackTrace());
+//            e.printStackTrace();
+//        } catch (SAXException e) {
+//            e.printStackTrace();
+//        } catch (ParserConfigurationException e) {
+//            e.printStackTrace();
+		} catch (Exception e) {
+			// since freemarker has its own logging, printing the stack trace is redundant?
+			// no exception handling actually done here
         } finally {
 			try {
 				out.close();
@@ -164,7 +171,7 @@ public class FreeMarkerUtil {
 					scanner.close();
 				out = null;
 			} catch (IOException e) {
-				System.out.println("读取模板文件IO异常！");
+				System.out.println("IO exception while closing the writer for template processing！");
 				e.printStackTrace();
 			}
 		}
@@ -187,10 +194,10 @@ public class FreeMarkerUtil {
 
 
     /**
-	 * 初始化模板配置
+	 * Initialise template configuration
 	 *
 	 * @param configFile
-	 *            模板位置
+	 *            The configuration file's location
 	 * @throws IOException
 	 * @throws TemplateModelException
 	 */
@@ -211,7 +218,7 @@ public class FreeMarkerUtil {
 		try {
 			freemarkerConfig.setDirectoryForTemplateLoading(templateDir);
 		} catch (IOException e) {
-			System.out.println("设置视图目录时出现IO异常！");
+			System.out.println("IO exception occurred while setting directory to load templates from！");
 			e.printStackTrace();
 		}
 
@@ -222,7 +229,7 @@ public class FreeMarkerUtil {
 		try {
 			addSharedVariables(configObj.getSharedVariables());
 		} catch (TemplateModelException e) {
-			System.out.println("添加全局变量时出错！");
+			System.out.println("Error adding shared variables！");
 			e.printStackTrace();
 		}
 
@@ -234,10 +241,10 @@ public class FreeMarkerUtil {
 	}
 
 	/**
-	 * 将配置文件内容转换为ConfigBean对象
+	 * Parse configuration content into the ConfigBean object
 	 *
 	 * @param configContent
-	 *            配置文件位置
+	 *            The configuration file's location
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -269,65 +276,65 @@ public class FreeMarkerUtil {
 	 * @param configFile
 	 * @return
 	 */
-	private static String readConfigFile(String configFile) {
-		String output = "";
-
-		File file = new File(configFile);
-
-		if (file.exists() && file.isFile()) {
-			BufferedReader input = null;
-			try {
-				input = new BufferedReader(new FileReader(file));
-				StringBuffer buffer = new StringBuffer();
-				String text;
-
-				while ((text = input.readLine()) != null)
-					buffer.append(text);
-				input.close();
-				output = buffer.toString();
-			} catch (IOException ioException) {
-				System.err.println("读取配置文件IO异常！");
-			} finally {
-				try {
-					input.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		} else {
-			System.err.println("Config File does not exist!");
-		}
-		return output;
-	}
+//	private static String readConfigFile(String configFile) {
+//		String output = "";
+//
+//		File file = new File(configFile);
+//
+//		if (file.exists() && file.isFile()) {
+//			BufferedReader input = null;
+//			try {
+//				input = new BufferedReader(new FileReader(file));
+//				StringBuffer buffer = new StringBuffer();
+//				String text;
+//
+//				while ((text = input.readLine()) != null)
+//					buffer.append(text);
+//				input.close();
+//				output = buffer.toString();
+//			} catch (IOException ioException) {
+//				System.err.println("读取配置文件IO异常！");
+//			} finally {
+//				try {
+//					input.close();
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		} else {
+//			System.err.println("Config File does not exist!");
+//		}
+//		return output;
+//	}
 
 	/**
-	 * 扫描目录下所有文件
+	 * Scan all files directory
 	 *
 	 * @param templatePath
 	 */
-	private static void scanFolder(File templatePath) {
-		File[] files = templatePath.listFiles();
+//	private static void scanFolder(File templatePath) {
+//		File[] files = templatePath.listFiles();
+//
+//		if (files == null)
+//			return;
+//		for (int i = 0; i < files.length; i++) {
+//			if (files[i].isDirectory()) {
+//				scanFolder(files[i]);
+//			} else {
+//				String strFileName = files[i].getAbsolutePath();
+//				addAutoes(strFileName);
+//			}
+//		}
+//	}
 
-		if (files == null)
-			return;
-		for (int i = 0; i < files.length; i++) {
-			if (files[i].isDirectory()) {
-				scanFolder(files[i]);
-			} else {
-				String strFileName = files[i].getAbsolutePath();
-				addAutoes(strFileName);
-			}
-		}
-	}
-
-	private static void addAutoes(String file) {
-		String relativeFilePath = file.replace(configObj.getViewFolder()
-				.getAbsolutePath(), "");
-		// addAutoImport
-		freemarkerConfig.addAutoImport("", relativeFilePath);
-		// addAutoInclude
-		freemarkerConfig.addAutoInclude(relativeFilePath);
-	}
+//	private static void addAutoes(String file) {
+//		String relativeFilePath = file.replace(configObj.getViewFolder()
+//				.getAbsolutePath(), "");
+//		// addAutoImport
+//		freemarkerConfig.addAutoImport("", relativeFilePath);
+//		// addAutoInclude
+//		freemarkerConfig.addAutoInclude(relativeFilePath);
+//	}
 
 	private static void addSharedVariables(Map<String, String> sharedVariables)
 			throws TemplateModelException {

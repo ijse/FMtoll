@@ -23,12 +23,12 @@ public class FMtoll {
         String deps = args[3];
         String nodes = args[4];
 
-        // 初始化
+        // initialisation
         FreeMarkerUtil.initConfig(fmconfig);
-        // 输出模板
+        // stream to output Template to
         Writer out = new OutputStreamWriter(System.out);
 
-        // 转换dataModel为MAP
+        // dataModel converted to JSON object
         Object parsedData = parseJSON(dataModel);
 
         JSONArray parsedDeps = (JSONArray) parseJSON(deps);
